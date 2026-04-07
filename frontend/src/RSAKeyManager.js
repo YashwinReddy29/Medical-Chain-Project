@@ -126,7 +126,7 @@ export default function RSAKeyManager({ addToast }) {
             </button>
           </div>
         ) : (
-          <div style={{display:"flex",flex-direction:"column",gap:"16px"}}>
+          <div style={{display:"flex",flexDirection:"column",gap:"16px"}}>
             <div className="form-group">
               <label>Your Public Key (share this with hospitals)</label>
               <div className="key-display">
