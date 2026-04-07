@@ -261,8 +261,7 @@ export default function App() {
               { id: "access", label: "Access Control", icon: "🔑" },
               { id: "admin", label: "Admin", icon: "⚙️" },
               { id: "analytics", label: "Analytics", icon: "📊" },
-              { id: "analytics", label: "Analytics", icon: "📊" },
-            ].filter((t) => !t.hidden).map((tab) => (
+].filter((t) => !t.hidden).map((tab) => (
               <button key={tab.id} className={`tab ${activeTab === tab.id ? "tab-active" : ""}`} onClick={() => setActiveTab(tab.id)}>
                 <span>{tab.icon}</span> {tab.label}
               </button>
