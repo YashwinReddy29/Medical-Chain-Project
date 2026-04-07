@@ -49,9 +49,12 @@ export function useNotifications(contract, account) {
     setUnread(notifications.filter(n => !n.read).length);
   }, [notifications]);
 
-  // Listen for blockchain events
+  // Listen for blockchain events - only register once
   useEffect(() => {
     if (!contract || !account) return;
+
+    // Remove all existing listeners first to prevent duplicates
+    try { contract.removeAllListeners(); } catch(e) {}
 
     const handleRecordUploaded = (patient, hash, fileName) => {
       if (patient.toLowerCase() === account.toLowerCase()) {
@@ -64,40 +67,14 @@ export function useNotifications(contract, account) {
       }
     };
 
-    const handleDoctorGranted = (patient, doctor) => {
-      if (patient.toLowerCase() === account.toLowerCase()) {
-        addNotification({
-          type: "access",
-          title: "Doctor Access Granted",
-          message: `Doctor ${doctor.slice(0,6)}…${doctor.slice(-4)} now has access to your records.`,
-        });
-      }
-    };
-
-    const handleDoctorRevoked = (patient, doctor) => {
-      if (patient.toLowerCase() === account.toLowerCase()) {
-        addNotification({
-          type: "revoke",
-          title: "Doctor Access Revoked",
-          message: `Access revoked for ${doctor.slice(0,6)}…${doctor.slice(-4)}.`,
-        });
-      }
-    };
-
     try {
       contract.on("RecordUploaded", handleRecordUploaded);
-      contract.on("DoctorGranted", handleDoctorGranted);
-      contract.on("DoctorRevoked", handleDoctorRevoked);
     } catch(e) { console.log("Event listener error:", e); }
 
     return () => {
-      try {
-        contract.off("RecordUploaded", handleRecordUploaded);
-        contract.off("DoctorGranted", handleDoctorGranted);
-        contract.off("DoctorRevoked", handleDoctorRevoked);
-      } catch(e) {}
+      try { contract.removeAllListeners(); } catch(e) {}
     };
-  }, [contract, account, addNotification]);
+  }, [contract, account]);
 
   return { notifications, unread, markAllRead, clearAll, deleteNotif };
 }
