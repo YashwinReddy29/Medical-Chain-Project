@@ -245,9 +245,10 @@ export default function App() {
             <p className="hero-desc">AES-256 encrypted. IPFS distributed. Blockchain verified. Full control over who sees your health data.</p>
             <button className="btn btn-hero" onClick={connectWallet}>Connect MetaMask →</button>
             <div className="hero-features">
-              <div className="hero-feature"><span>🔐</span> End-to-end encrypted</div>
-              <div className="hero-feature"><span>⛓️</span> Immutable audit trail</div>
-              <div className="hero-feature"><span>☁️</span> Decentralized storage</div>
+              <div className="hero-feature"><span>🔐</span> AES-256 Encrypted</div>
+              <div className="hero-feature"><span>⛓️</span> Blockchain Verified</div>
+              <div className="hero-feature"><span>☁️</span> IPFS Distributed</div>
+              <div className="hero-feature"><span>🏥</span> Multi-Hospital</div>
             </div>
           </div>
           <div className="hero-visual">
@@ -285,7 +286,9 @@ export default function App() {
                 <h2>Medical Records</h2>
                 <button className="btn btn-sm" onClick={loadRecords} disabled={loading}>↻ Refresh</button>
               </div>
-              {records.length === 0 ? (
+              {loading ? (
+                <div className="spinner" />
+              ) : records.length === 0 ? (
                 <div className="empty-state">
                   <div className="empty-icon">📂</div>
                   <p>No records found for your address.</p>
