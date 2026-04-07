@@ -6,6 +6,7 @@ import { encryptFile, decryptFile, downloadBlob } from "./crypto";
 import "./App.css";
 import Analytics from "./Analytics";
 import Notifications, { useNotifications } from "./Notifications";
+import HospitalDashboard from "./HospitalDashboard";
 
 const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS || "0x0000000000000000000000000000000000000000";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
@@ -266,6 +267,7 @@ export default function App() {
               { id: "upload", label: "Upload", icon: "📤", hidden: !isHospital },
               { id: "access", label: "Access Control", icon: "🔑" },
               { id: "admin", label: "Admin", icon: "⚙️" },
+              { id: "hospitals", label: "Hospitals", icon: "🏥" },
               { id: "analytics", label: "Analytics", icon: "📊" },
               { id: "notifications", label: "Notifications", icon: "🔔" },
 ].filter((t) => !t.hidden).map((tab) => (
@@ -410,6 +412,12 @@ export default function App() {
             <div className="panel">
               <div className="panel-header"><h2>📊 Analytics Dashboard</h2></div>
               <Analytics records={records} authorizedDoctors={authorizedDoctors} account={account} />
+            </div>
+          )}
+          {activeTab === "hospitals" && (
+            <div className="panel">
+              <div className="panel-header"><h2>🏥 Multi-Hospital Dashboard</h2></div>
+              <HospitalDashboard contract={contract} account={account} records={records} addToast={addToast} />
             </div>
           )}
           {activeTab === "notifications" && (
