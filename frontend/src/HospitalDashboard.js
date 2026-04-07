@@ -119,14 +119,14 @@ export default function HospitalDashboard({ contract, account, records, addToast
         <div className="hosp-stat-card">
           <div className="hosp-stat-icon">🌐</div>
           <div className="hosp-stat-body">
-            <div className="hosp-stat-value">Sepolia</div>
+            <div className="hosp-stat-value" style={{fontSize:"14px"}}>Sepolia</div>
             <div className="hosp-stat-label">Network</div>
           </div>
         </div>
         <div className="hosp-stat-card">
           <div className="hosp-stat-icon">🔐</div>
           <div className="hosp-stat-body">
-            <div className="hosp-stat-value">AES-256</div>
+            <div className="hosp-stat-value" style={{fontSize:"14px"}}>AES-256</div>
             <div className="hosp-stat-label">Encryption</div>
           </div>
         </div>
