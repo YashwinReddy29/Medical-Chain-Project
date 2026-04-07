@@ -217,3 +217,22 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .network-info-label{display:block;font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
 .network-info-value{display:block;font-size:13px;color:var(--text);font-weight:500;word-break:break-all}
 @media(max-width:768px){.network-info-grid{grid-template-columns:1fr}.hospital-grid{grid-template-columns:1fr}.hosp-section-header{flex-direction:column;align-items:flex-start;gap:12px}}
+
+/* ─── RSA Key Manager ────────────────────────────────────────────────────── */
+.rsa-manager{display:flex;flex-direction:column;gap:24px}
+.rsa-status{display:flex;align-items:flex-start;gap:16px;padding:20px;border-radius:var(--radius);border:1px solid}
+.rsa-status-ok{background:rgba(0,229,196,0.08);border-color:rgba(0,229,196,0.3)}
+.rsa-status-warn{background:rgba(255,209,102,0.08);border-color:rgba(255,209,102,0.3)}
+.rsa-status-icon{font-size:28px;flex-shrink:0}
+.rsa-status-title{font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--text);margin-bottom:4px}
+.rsa-status-sub{font-size:13px;color:var(--text-2);line-height:1.5}
+.key-display{display:flex;align-items:center;gap:10px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+.key-code{flex:1;font-family:'Courier New',monospace;font-size:11px;color:var(--teal);word-break:break-all}
+.key-warning{background:rgba(255,83,112,0.08);border:1px solid rgba(255,83,112,0.3);border-radius:var(--radius);padding:16px}
+.key-warning-title{font-family:var(--font-display);font-weight:700;color:var(--red);margin-bottom:10px}
+.rsa-flow{display:flex;flex-direction:column;gap:12px}
+.rsa-step{display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius)}
+.rsa-step-num{width:28px;height:28px;background:var(--teal);color:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:13px;flex-shrink:0}
+.rsa-step-icon{font-size:22px;flex-shrink:0}
+.rsa-step-title{font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--text);margin-bottom:2px}
+.rsa-step-desc{font-size:12px;color:var(--text-2)}

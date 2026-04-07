@@ -7,6 +7,7 @@ import "./App.css";
 import Analytics from "./Analytics";
 import Notifications, { useNotifications } from "./Notifications";
 import HospitalDashboard from "./HospitalDashboard";
+import RSAKeyManager from "./RSAKeyManager";
 
 const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS || "0x0000000000000000000000000000000000000000";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
@@ -268,6 +269,7 @@ export default function App() {
               { id: "access", label: "Access Control", icon: "🔑" },
               { id: "admin", label: "Admin", icon: "⚙️" },
               { id: "hospitals", label: "Hospitals", icon: "🏥" },
+              { id: "rsa", label: "Encryption", icon: "🔐" },
               { id: "analytics", label: "Analytics", icon: "📊" },
               { id: "notifications", label: "Notifications", icon: "🔔" },
 ].filter((t) => !t.hidden).map((tab) => (
@@ -412,6 +414,12 @@ export default function App() {
             <div className="panel">
               <div className="panel-header"><h2>📊 Analytics Dashboard</h2></div>
               <Analytics records={records} authorizedDoctors={authorizedDoctors} account={account} />
+            </div>
+          )}
+          {activeTab === "rsa" && (
+            <div className="panel">
+              <div className="panel-header"><h2>🔐 RSA Doctor Encryption</h2></div>
+              <RSAKeyManager addToast={addToast} />
             </div>
           )}
           {activeTab === "hospitals" && (
