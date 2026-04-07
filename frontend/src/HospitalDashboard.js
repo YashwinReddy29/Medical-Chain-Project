@@ -1,108 +1,67 @@
 import React, { useState, useEffect, useCallback } from "react";
 
-function HospitalCard({ address, name, recordCount, isCurrentUser }) {
-  return (
-    <div className={`hospital-card ${isCurrentUser ? "hospital-card-active" : ""}`}>
-      <div className="hospital-card-header">
-        <div className="hospital-avatar">🏥</div>
-        <div className="hospital-info">
-          <div className="hospital-name">{name || "Unnamed Hospital"}</div>
-          <div className="hospital-addr">{address}</div>
-        </div>
-        {isCurrentUser && <span className="badge badge-hospital">You</span>}
-      </div>
-      <div className="hospital-stats">
-        <div className="hospital-stat">
-          <span className="hospital-stat-value">{recordCount}</span>
-          <span className="hospital-stat-label">Records Uploaded</span>
-        </div>
-        <div className="hospital-stat">
-          <span className="hospital-stat-value" style={{color:"var(--green)"}}>✓</span>
-          <span className="hospital-stat-label">Verified</span>
-        </div>
-        <div className="hospital-stat">
-          <span className="hospital-stat-value">Sepolia</span>
-          <span className="hospital-stat-label">Network</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function HospitalDashboard({ contract, account, records, addToast }) {
   const [hospitals, setHospitals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newHospAddr, setNewHospAddr] = useState("");
   const [newHospName, setNewHospName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [registeredAddresses, setRegisteredAddresses] = useState([]);
-
-  // Track registered hospitals from events
-  // Manually check known addresses too
-  const checkAndAdd = useCallback(async (addr, name) => {
-    if (!contract) return;
-    const isHosp = await contract.hospitals(addr);
-    if (isHosp) {
-      const hospName = await contract.hospitalNames(addr);
-      setHospitals(prev => {
-        const exists = prev.find(h => h.address.toLowerCase() === addr.toLowerCase());
-        if (exists) return prev;
-        return [...prev, { address: addr, name: hospName || name, recordCount: 0 }];
-      });
-    }
-  }, [contract]);
 
   const loadHospitals = useCallback(async () => {
     if (!contract) return;
     setLoading(true);
     try {
-      // Get HospitalRegistered events
+      // Get all HospitalRegistered events from block 0
       const filter = contract.filters.HospitalRegistered();
-      const events = await contract.queryFilter(filter, 0, "latest");
+      const events = await contract.queryFilter(filter);
 
       const seen = new Set();
-      const hospList = [];
+      const list = [];
 
-      for (const event of events) {
-        const addr = event.args[0];
-        const name = event.args[1];
-        if (!seen.has(addr)) {
-          seen.add(addr);
-          // Count records uploaded by this hospital
-          const count = records.filter(
-            r => r.hospital?.toLowerCase() === addr.toLowerCase()
+      // Always check current account first
+      if (account) {
+        const isHosp = await contract.hospitals(account);
+        if (isHosp) {
+          const name = await contract.hospitalNames(account);
+          seen.add(account.toLowerCase());
+          const count = records.filter(r =>
+            r.hospital?.toLowerCase() === account.toLowerCase()
           ).length;
-          hospList.push({ address: addr, name, recordCount: count });
+          list.push({ address: account, name: name || "My Hospital", recordCount: count, isMe: true });
         }
       }
 
-      setHospitals(hospList);
-      setRegisteredAddresses(hospList.map(h => h.address.toLowerCase()));
+      // Then add from events
+      for (const ev of events) {
+        const addr = ev.args[0];
+        const name = ev.args[1];
+        if (!seen.has(addr.toLowerCase())) {
+          seen.add(addr.toLowerCase());
+          const count = records.filter(r =>
+            r.hospital?.toLowerCase() === addr.toLowerCase()
+          ).length;
+          list.push({ address: addr, name, recordCount: count, isMe: addr.toLowerCase() === account?.toLowerCase() });
+        }
+      }
+
+      setHospitals(list);
     } catch (err) {
-      console.error("Failed to load hospitals:", err);
-      addToast("Failed to load hospitals", "error");
+      console.error(err);
+      // Fallback — just check current account
+      if (account) {
+        try {
+          const isHosp = await contract.hospitals(account);
+          if (isHosp) {
+            const name = await contract.hospitalNames(account);
+            setHospitals([{ address: account, name: name || "My Hospital", recordCount: 0, isMe: true }]);
+          }
+        } catch(e) { console.error(e); }
+      }
     }
     setLoading(false);
-  }, [contract, records, addToast]);
+  }, [contract, account, records]);
 
   useEffect(() => { loadHospitals(); }, [loadHospitals]);
-
-  // Also check if current account is a hospital on load
-  useEffect(() => {
-    if (!contract || !account) return;
-    const check = async () => {
-      const isHosp = await contract.hospitals(account);
-      if (isHosp) {
-        const name = await contract.hospitalNames(account);
-        setHospitals(prev => {
-          const exists = prev.find(h => h.address.toLowerCase() === account.toLowerCase());
-          if (exists) return prev;
-          return [...prev, { address: account, name: name || "My Hospital", recordCount: 0 }];
-        });
-      }
-    };
-    check();
-  }, [contract, account]);
 
   async function registerHospital() {
     if (!contract) return addToast("Connect wallet first", "error");
@@ -112,16 +71,23 @@ export default function HospitalDashboard({ contract, account, records, addToast
       const tx = await contract.registerHospital(newHospAddr, newHospName);
       addToast("Waiting for confirmation...", "info");
       await tx.wait();
-      addToast(`Hospital "${newHospName}" registered!`, "success");
-      // Add to list immediately without waiting for event query
+      addToast(`"${newHospName}" registered!`, "success");
+      // Add immediately to UI
+      const count = records.filter(r =>
+        r.hospital?.toLowerCase() === newHospAddr.toLowerCase()
+      ).length;
       setHospitals(prev => {
         const exists = prev.find(h => h.address.toLowerCase() === newHospAddr.toLowerCase());
         if (exists) return prev;
-        return [...prev, { address: newHospAddr, name: newHospName, recordCount: 0 }];
+        return [...prev, {
+          address: newHospAddr,
+          name: newHospName,
+          recordCount: count,
+          isMe: newHospAddr.toLowerCase() === account?.toLowerCase()
+        }];
       });
       setNewHospAddr("");
       setNewHospName("");
-      await loadHospitals();
     } catch (err) {
       addToast("Failed: " + err.message, "error");
     }
@@ -137,45 +103,33 @@ export default function HospitalDashboard({ contract, account, records, addToast
 
   return (
     <div className="hospital-dashboard">
-      {/* Summary Stats */}
+      {/* Stats */}
       <div className="hosp-stats-row">
-        <div className="hosp-stat-card">
-          <div className="hosp-stat-icon">🏥</div>
-          <div className="hosp-stat-body">
-            <div className="hosp-stat-value">{hospitals.length}</div>
-            <div className="hosp-stat-label">Registered Hospitals</div>
+        {[
+          { icon:"🏥", value: hospitals.length, label:"Registered Hospitals" },
+          { icon:"📋", value: totalRecords, label:"Total Records" },
+          { icon:"🌐", value: "Sepolia", label:"Network", small: true },
+          { icon:"🔐", value: "AES-256", label:"Encryption", small: true },
+        ].map((s,i) => (
+          <div key={i} className="hosp-stat-card">
+            <div className="hosp-stat-icon">{s.icon}</div>
+            <div className="hosp-stat-body">
+              <div className="hosp-stat-value" style={s.small?{fontSize:"14px"}:{}}>{s.value}</div>
+              <div className="hosp-stat-label">{s.label}</div>
+            </div>
           </div>
-        </div>
-        <div className="hosp-stat-card">
-          <div className="hosp-stat-icon">📋</div>
-          <div className="hosp-stat-body">
-            <div className="hosp-stat-value">{totalRecords}</div>
-            <div className="hosp-stat-label">Total Records</div>
-          </div>
-        </div>
-        <div className="hosp-stat-card">
-          <div className="hosp-stat-icon">🌐</div>
-          <div className="hosp-stat-body">
-            <div className="hosp-stat-value" style={{fontSize:"14px"}}>Sepolia</div>
-            <div className="hosp-stat-label">Network</div>
-          </div>
-        </div>
-        <div className="hosp-stat-card">
-          <div className="hosp-stat-icon">🔐</div>
-          <div className="hosp-stat-body">
-            <div className="hosp-stat-value" style={{fontSize:"14px"}}>AES-256</div>
-            <div className="hosp-stat-label">Encryption</div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Register New Hospital */}
+      {/* Register */}
       <div className="hosp-section">
         <h3 className="hosp-section-title">➕ Register New Hospital</h3>
         <div className="form-grid">
           <div className="form-group">
             <label>Hospital Wallet Address</label>
             <input
+              id="hosp-addr"
+              name="hosp-addr"
               className="input"
               placeholder="0x..."
               value={newHospAddr}
@@ -185,6 +139,8 @@ export default function HospitalDashboard({ contract, account, records, addToast
           <div className="form-group">
             <label>Hospital Name</label>
             <input
+              id="hosp-name"
+              name="hosp-name"
               className="input"
               placeholder="e.g. City General Hospital"
               value={newHospName}
@@ -192,24 +148,31 @@ export default function HospitalDashboard({ contract, account, records, addToast
             />
           </div>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={registerHospital}
-          disabled={loading || !newHospAddr || !newHospName}
-        >
-          {loading ? "Processing..." : "🏥 Register Hospital"}
-        </button>
+        <div style={{display:"flex",gap:"12px",alignItems:"center"}}>
+          <button
+            className="btn btn-primary"
+            onClick={registerHospital}
+            disabled={loading || !newHospAddr || !newHospName}
+          >
+            {loading ? "Processing..." : "🏥 Register Hospital"}
+          </button>
+          <button className="btn btn-sm" onClick={() => setNewHospAddr(account || "")}>
+            Use my address
+          </button>
+        </div>
       </div>
 
-      {/* Hospital List */}
+      {/* List */}
       <div className="hosp-section">
         <div className="hosp-section-header">
           <h3 className="hosp-section-title">🏥 Registered Hospitals ({hospitals.length})</h3>
-          <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+          <div style={{display:"flex",gap:"8px"}}>
             <input
+              id="hosp-search"
+              name="hosp-search"
               className="input"
-              style={{width:"220px",padding:"8px 12px"}}
-              placeholder="🔍 Search hospitals..."
+              style={{width:"200px",padding:"8px 12px"}}
+              placeholder="🔍 Search..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
             />
@@ -220,26 +183,42 @@ export default function HospitalDashboard({ contract, account, records, addToast
         </div>
 
         {loading ? (
-          <div className="empty-state">
-            <div className="empty-icon">⏳</div>
-            <p>Loading hospitals from blockchain...</p>
-          </div>
+          <div className="empty-state"><div className="empty-icon">⏳</div><p>Loading...</p></div>
         ) : filtered.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">🏥</div>
-            <p>No hospitals registered yet.</p>
-            <p className="empty-sub">Register the first hospital above.</p>
+            <p>No hospitals found.</p>
+            <p className="empty-sub">Register one above or click Refresh.</p>
           </div>
         ) : (
           <div className="hospital-grid">
             {filtered.map((h, i) => (
-              <HospitalCard
-                key={i}
-                address={h.address}
-                name={h.name}
-                recordCount={h.recordCount}
-                isCurrentUser={h.address.toLowerCase() === account?.toLowerCase()}
-              />
+              <div key={i} className={`hospital-card ${h.isMe ? "hospital-card-active" : ""}`}>
+                <div className="hospital-card-header">
+                  <div className="hospital-avatar">🏥</div>
+                  <div className="hospital-info">
+                    <div className="hospital-name">{h.name}</div>
+                    <div className="hospital-addr" title={h.address}>
+                      {h.address.slice(0,10)}…{h.address.slice(-6)}
+                    </div>
+                  </div>
+                  {h.isMe && <span className="badge badge-hospital">You</span>}
+                </div>
+                <div className="hospital-stats">
+                  <div className="hospital-stat">
+                    <span className="hospital-stat-value">{h.recordCount}</span>
+                    <span className="hospital-stat-label">Records</span>
+                  </div>
+                  <div className="hospital-stat">
+                    <span className="hospital-stat-value" style={{color:"var(--green)"}}>✓</span>
+                    <span className="hospital-stat-label">Verified</span>
+                  </div>
+                  <div className="hospital-stat">
+                    <span className="hospital-stat-value" style={{fontSize:"11px"}}>Active</span>
+                    <span className="hospital-stat-label">Status</span>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -247,30 +226,21 @@ export default function HospitalDashboard({ contract, account, records, addToast
 
       {/* Network Info */}
       <div className="hosp-section">
-        <h3 className="hosp-section-title">⛓️ Network Information</h3>
+        <h3 className="hosp-section-title">⛓️ Network Info</h3>
         <div className="network-info-grid">
-          <div className="network-info-item">
-            <span className="network-info-label">Contract Address</span>
-            <span className="network-info-value" style={{fontFamily:"monospace",fontSize:"12px"}}>
-              {contract?.target || "Not connected"}
-            </span>
-          </div>
-          <div className="network-info-item">
-            <span className="network-info-label">Your Address</span>
-            <span className="network-info-value" style={{fontFamily:"monospace",fontSize:"12px"}}>
-              {account || "Not connected"}
-            </span>
-          </div>
-          <div className="network-info-item">
-            <span className="network-info-label">Your Role</span>
-            <span className="network-info-value">
-              {registeredAddresses.includes(account?.toLowerCase()) ? "🏥 Hospital" : "👤 Patient"}
-            </span>
-          </div>
-          <div className="network-info-item">
-            <span className="network-info-label">Storage</span>
-            <span className="network-info-value">☁️ IPFS via Pinata</span>
-          </div>
+          {[
+            { label:"Contract", value: contract?.target || "Not connected" },
+            { label:"Your Address", value: account || "Not connected" },
+            { label:"Your Role", value: hospitals.find(h=>h.isMe) ? "🏥 Hospital" : "👤 Patient" },
+            { label:"Storage", value: "☁️ IPFS via Pinata" },
+          ].map((item,i) => (
+            <div key={i} className="network-info-item">
+              <span className="network-info-label">{item.label}</span>
+              <span className="network-info-value" style={{fontFamily:"monospace",fontSize:"12px"}}>
+                {item.value}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
