@@ -38,6 +38,20 @@ export default function HospitalDashboard({ contract, account, records, addToast
   const [registeredAddresses, setRegisteredAddresses] = useState([]);
 
   // Track registered hospitals from events
+  // Manually check known addresses too
+  const checkAndAdd = useCallback(async (addr, name) => {
+    if (!contract) return;
+    const isHosp = await contract.hospitals(addr);
+    if (isHosp) {
+      const hospName = await contract.hospitalNames(addr);
+      setHospitals(prev => {
+        const exists = prev.find(h => h.address.toLowerCase() === addr.toLowerCase());
+        if (exists) return prev;
+        return [...prev, { address: addr, name: hospName || name, recordCount: 0 }];
+      });
+    }
+  }, [contract]);
+
   const loadHospitals = useCallback(async () => {
     if (!contract) return;
     setLoading(true);
@@ -73,6 +87,23 @@ export default function HospitalDashboard({ contract, account, records, addToast
 
   useEffect(() => { loadHospitals(); }, [loadHospitals]);
 
+  // Also check if current account is a hospital on load
+  useEffect(() => {
+    if (!contract || !account) return;
+    const check = async () => {
+      const isHosp = await contract.hospitals(account);
+      if (isHosp) {
+        const name = await contract.hospitalNames(account);
+        setHospitals(prev => {
+          const exists = prev.find(h => h.address.toLowerCase() === account.toLowerCase());
+          if (exists) return prev;
+          return [...prev, { address: account, name: name || "My Hospital", recordCount: 0 }];
+        });
+      }
+    };
+    check();
+  }, [contract, account]);
+
   async function registerHospital() {
     if (!contract) return addToast("Connect wallet first", "error");
     if (!newHospAddr || !newHospName) return addToast("Fill all fields", "error");
@@ -82,6 +113,12 @@ export default function HospitalDashboard({ contract, account, records, addToast
       addToast("Waiting for confirmation...", "info");
       await tx.wait();
       addToast(`Hospital "${newHospName}" registered!`, "success");
+      // Add to list immediately without waiting for event query
+      setHospitals(prev => {
+        const exists = prev.find(h => h.address.toLowerCase() === newHospAddr.toLowerCase());
+        if (exists) return prev;
+        return [...prev, { address: newHospAddr, name: newHospName, recordCount: 0 }];
+      });
       setNewHospAddr("");
       setNewHospName("");
       await loadHospitals();
