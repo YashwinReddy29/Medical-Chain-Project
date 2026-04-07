@@ -5,6 +5,7 @@ import MedChainABI from "./MedicalRecords.json";
 import { encryptFile, decryptFile, downloadBlob } from "./crypto";
 import "./App.css";
 import Analytics from "./Analytics";
+import Notifications, { useNotifications } from "./Notifications";
 
 const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS || "0x0000000000000000000000000000000000000000";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
@@ -63,6 +64,7 @@ export default function App() {
   const [hospitalAddr, setHospitalAddr] = useState("");
   const [hospitalName, setHospitalName] = useState("");
   const [storedKeys, setStoredKeys] = useState({});
+  const { notifications, unread, markAllRead, clearAll, deleteNotif } = useNotifications(contract, account);
 
   const addToast = useCallback((message, type = "info") => {
     const id = Date.now();
@@ -221,6 +223,10 @@ export default function App() {
           {account ? (
             <div className="wallet-info">
               {isHospital && <span className="badge badge-hospital">🏥 Hospital</span>}
+              <button className="header-notif" onClick={() => setActiveTab("notifications")}>
+                🔔
+                {unread > 0 && <span className="header-notif-badge" />}
+              </button>
               <span className="wallet-addr">{shortenAddress(account)}</span>
               <div className="wallet-dot" />
             </div>
@@ -261,6 +267,7 @@ export default function App() {
               { id: "access", label: "Access Control", icon: "🔑" },
               { id: "admin", label: "Admin", icon: "⚙️" },
               { id: "analytics", label: "Analytics", icon: "📊" },
+              { id: "notifications", label: "Notifications", icon: "🔔" },
 ].filter((t) => !t.hidden).map((tab) => (
               <button key={tab.id} className={`tab ${activeTab === tab.id ? "tab-active" : ""}`} onClick={() => setActiveTab(tab.id)}>
                 <span>{tab.icon}</span> {tab.label}
@@ -404,6 +411,15 @@ export default function App() {
               <div className="panel-header"><h2>📊 Analytics Dashboard</h2></div>
               <Analytics records={records} authorizedDoctors={authorizedDoctors} account={account} />
             </div>
+          )}
+          {activeTab === "notifications" && (
+            <Notifications
+              notifications={notifications}
+              unread={unread}
+              markAllRead={markAllRead}
+              clearAll={clearAll}
+              deleteNotif={deleteNotif}
+            />
           )}
         </main>
       )}
