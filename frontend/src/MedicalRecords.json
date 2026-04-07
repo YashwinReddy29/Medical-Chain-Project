@@ -1,0 +1,18 @@
+{
+  "contractName": "MedChain",
+  "abi": [
+    {"inputs":[{"internalType":"address","name":"doctor","type":"address"}],"name":"grantDoctorAccess","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"address","name":"patient","type":"address"}],"name":"getAuthorizedDoctors","outputs":[{"internalType":"address[]","name":"","type":"address[]"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"patient","type":"address"}],"name":"getRecords","outputs":[{"components":[{"internalType":"string","name":"ipfsHash","type":"string"},{"internalType":"string","name":"fileName","type":"string"},{"internalType":"address","name":"hospital","type":"address"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"bool","name":"active","type":"bool"},{"internalType":"string","name":"iv","type":"string"},{"internalType":"string","name":"recordType","type":"string"}],"internalType":"struct MedChain.Record[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"patient","type":"address"},{"internalType":"address","name":"doctor","type":"address"}],"name":"hasAccess","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"hospitalNames","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"hospitals","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"hospital","type":"address"},{"internalType":"string","name":"name","type":"string"}],"name":"registerHospital","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"address","name":"doctor","type":"address"}],"name":"revokeDoctorAccess","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"deleteRecord","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"address","name":"patient","type":"address"},{"internalType":"string","name":"ipfsHash","type":"string"},{"internalType":"string","name":"fileName","type":"string"},{"internalType":"string","name":"iv","type":"string"},{"internalType":"string","name":"recordType","type":"string"},{"components":[{"internalType":"address","name":"user","type":"address"},{"internalType":"string","name":"encryptedKey","type":"string"}],"internalType":"struct MedChain.Access[]","name":"accessList","type":"tuple[]"}],"name":"uploadRecord","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"hospital","type":"address"},{"indexed":false,"internalType":"string","name":"name","type":"string"}],"name":"HospitalRegistered","type":"event"},
+    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"patient","type":"address"},{"indexed":false,"internalType":"string","name":"hash","type":"string"},{"indexed":false,"internalType":"string","name":"fileName","type":"string"}],"name":"RecordUploaded","type":"event"},
+    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"patient","type":"address"},{"indexed":false,"internalType":"uint256","name":"index","type":"uint256"}],"name":"RecordDeleted","type":"event"}
+  ]
+}
