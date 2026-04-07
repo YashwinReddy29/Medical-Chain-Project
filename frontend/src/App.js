@@ -117,10 +117,16 @@ export default function App() {
     setLoading(true);
     try {
       const tx = await contract.registerHospital(hospitalAddr, hospitalName);
+      addToast("Transaction submitted, waiting for confirmation...", "info");
       await tx.wait();
       addToast(`Hospital "${hospitalName}" registered!`, "success");
       setHospitalAddr(""); setHospitalName("");
-      if (hospitalAddr.toLowerCase() === account.toLowerCase()) setIsHospital(true);
+      // Re-check hospital status from blockchain
+      const hosp = await contract.hospitals(account);
+      setIsHospital(hosp);
+      // Force reload records and doctors
+      await loadRecords();
+      await loadDoctors();
     } catch (err) { addToast("Failed: " + err.message, "error"); }
     setLoading(false);
   }
