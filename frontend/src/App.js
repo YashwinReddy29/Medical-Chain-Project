@@ -413,13 +413,7 @@ export default function App() {
               <Analytics records={records} authorizedDoctors={authorizedDoctors} account={account} />
             </div>
           )}
-          {activeTab === "analytics" && (
-            <div className="panel">
-              <div className="panel-header"><h2>📊 Analytics Dashboard</h2></div>
-              <Analytics records={records} authorizedDoctors={authorizedDoctors} account={account} />
-            </div>
-          )}
-          {activeTab === "rsa" && (
+                    {activeTab === "rsa" && (
             <div className="panel">
               <div className="panel-header"><h2>🔐 RSA Doctor Encryption</h2></div>
               <RSAKeyManager addToast={addToast} />
