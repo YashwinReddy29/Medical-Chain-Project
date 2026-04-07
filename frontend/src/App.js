@@ -5,6 +5,7 @@ import MedChainABI from "./MedicalRecords.json";
 import { encryptFile, decryptFile, downloadBlob } from "./crypto";
 import "./App.css";
 import Analytics from "./Analytics";
+import Analytics from "./Analytics";
 
 const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS || "0x0000000000000000000000000000000000000000";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
@@ -261,6 +262,7 @@ export default function App() {
               { id: "access", label: "Access Control", icon: "🔑" },
               { id: "admin", label: "Admin", icon: "⚙️" },
               { id: "analytics", label: "Analytics", icon: "📊" },
+              { id: "analytics", label: "Analytics", icon: "📊" },
             ].filter((t) => !t.hidden).map((tab) => (
               <button key={tab.id} className={`tab ${activeTab === tab.id ? "tab-active" : ""}`} onClick={() => setActiveTab(tab.id)}>
                 <span>{tab.icon}</span> {tab.label}
@@ -396,6 +398,12 @@ export default function App() {
           {activeTab === "analytics" && (
             <div className="panel">
               <div className="panel-header"><h2>Analytics Dashboard</h2></div>
+              <Analytics records={records} authorizedDoctors={authorizedDoctors} account={account} />
+            </div>
+          )}
+          {activeTab === "analytics" && (
+            <div className="panel">
+              <div className="panel-header"><h2>📊 Analytics Dashboard</h2></div>
               <Analytics records={records} authorizedDoctors={authorizedDoctors} account={account} />
             </div>
           )}
